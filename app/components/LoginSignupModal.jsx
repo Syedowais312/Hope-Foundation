@@ -1,27 +1,19 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 
-interface LoginSignupModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-interface FormData {
-  name: string;
-  email: string;
-  password: string;
-}
-
-export default function LoginSignupModal({ isOpen, onClose }: LoginSignupModalProps) {
+export default function LoginSignupModal({ isOpen, onClose }) {
   const [isLogin, setIsLogin] = useState(true);
-  const [form, setForm] = useState<FormData>({
+  const [form, setForm] = useState({
     name: "",
     email: "",
     password: "",
+    number:"",
   });
+  const { login } = useAuth();
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const url = isLogin ? "/api/login" : "/api/signup";
 
@@ -33,11 +25,17 @@ export default function LoginSignupModal({ isOpen, onClose }: LoginSignupModalPr
       });
 
       const data = await res.json();
+
       alert(data.message);
 
       if (res.ok) {
-        setForm({ name: "", email: "", password: "" }); // Reset form
-        onClose(); // Close modal
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+
+        login(data.user, data.token);
+
+        setForm({ name: "", email: "", password: "" ,number:""});
+        onClose();
       }
     } catch (err) {
       alert("Something went wrong. Please try again.");
@@ -58,33 +56,51 @@ export default function LoginSignupModal({ isOpen, onClose }: LoginSignupModalPr
         </h2>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {!isLogin && (
-            <input
-              type="text"
-              placeholder="Name"
-              value={form.name}
-              required
-              className="input border border-gray-300 px-4 py-2 rounded"
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
-          )}
+         {!isLogin && (
+  <>
+    <input
+      type="text"
+      placeholder="Name"
+      value={form.name}
+      required
+      className="input border border-black px-4 py-2 rounded text-black"
+      onChange={(e) => setForm({ ...form, name: e.target.value })}
+    />
+     <input
+      type="tel"
+      placeholder="Phone Number"
+      value={form.number}
+      required
+      pattern="[0-9]{10}"
+      className="input border border-black px-4 py-2 rounded text-black"
+      onChange={(e) => setForm({ ...form, number: e.target.value })}
+    />
+   
+  </>
+)}
+
           <input
             type="email"
             placeholder="Email"
             value={form.email}
             required
-            className="input border border-gray-300 px-4 py-2 rounded"
+            className="input border border-black px-4 py-2 rounded text-black"
             onChange={(e) => setForm({ ...form, email: e.target.value })}
           />
+          
+          
           <input
             type="password"
             placeholder="Password"
             value={form.password}
             required
-            className="input border border-gray-300 px-4 py-2 rounded"
+            className="input border border-black px-4 py-2 rounded text-black"
             onChange={(e) => setForm({ ...form, password: e.target.value })}
           />
-          <button type="submit" className="bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg">
+          <button
+            type="submit"
+            className="bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg"
+          >
             {isLogin ? "Login" : "Create Account"}
           </button>
         </form>

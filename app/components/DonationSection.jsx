@@ -19,7 +19,7 @@ export default function DonationSection() {
     <section className="max-w-7xl mx-auto px-6 py-20 bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] rounded-xl shadow-2xl text-white overflow-hidden">
       <div className="flex flex-col md:flex-row items-center justify-between gap-12">
         {/* Left Section */}
-        <div className="flex-1">
+        <div className="flex-1 max-w-lg">
           <h2 className="text-4xl md:text-5xl font-extrabold leading-tight bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 text-transparent bg-clip-text drop-shadow-xl">
             “Your small help can change someone's life forever.”
           </h2>
@@ -28,7 +28,6 @@ export default function DonationSection() {
           </p>
 
           <button
-           
             className="mt-8 px-8 py-3 text-lg bg-gradient-to-r from-green-400 to-lime-500 rounded-xl shadow-lg hover:from-green-500 hover:to-lime-600 transition duration-300 font-semibold text-white ring-2 ring-white/10 hover:scale-105"
           >
             💖 Login to Donate
@@ -36,20 +35,44 @@ export default function DonationSection() {
         </div>
 
         {/* Right Stats & QR Card */}
-        <div className="flex-1 flex flex-col gap-10 md:gap-12 items-center md:items-end">
+        <div className="flex-1 flex flex-col gap-10 md:gap-12 items-center md:items-end w-full max-w-md">
           {/* Live Stats */}
-          <div className="flex gap-14 bg-white bg-opacity-10 backdrop-blur-md rounded-2xl px-10 py-8 shadow-lg w-full max-w-md justify-around border border-white/10">
-            <div className="text-center">
-              <p className="text-5xl font-extrabold text-green-400 drop-shadow-md">
-                <CountUp end={totalMoney} duration={1.5} separator="," prefix="₹" />
+          <div className="flex flex-wrap gap-8 bg-white bg-opacity-10 backdrop-blur-md rounded-3xl px-8 py-10 shadow-lg w-full justify-center border border-white/20">
+            {/* Total Money */}
+            <div className="flex flex-col items-center w-40">
+              <div className="mb-2 h-1.5 w-12 rounded-full bg-indigo-500"></div>
+              <p
+                className="text-4xl font-extrabold text-green-400 drop-shadow-md font-mono w-full text-center select-text"
+                style={{ letterSpacing: '0.04em' }}
+              >
+                <CountUp
+                  end={totalMoney}
+                  duration={1.5}
+                  separator=","
+                  prefix="₹"
+                />
               </p>
-              <p className="mt-1 text-indigo-200 font-medium tracking-wide">Total Money Donated</p>
+              <p className="mt-2 text-indigo-200 font-medium tracking-wide uppercase text-center select-none">
+                Total Money Donated
+              </p>
             </div>
-            <div className="text-center">
-              <p className="text-5xl font-extrabold text-blue-400 drop-shadow-md">
-                <CountUp end={totalPeople} duration={1.5} separator="," />
+
+            {/* Total People */}
+            <div className="flex flex-col items-center w-32">
+              <div className="mb-2 h-1.5 w-8 rounded-full bg-blue-400"></div>
+              <p
+                className="text-4xl font-extrabold text-blue-400 drop-shadow-md font-mono w-full text-center select-text"
+                style={{ letterSpacing: '0.04em' }}
+              >
+                <CountUp
+                  end={totalPeople}
+                  duration={1.5}
+                  separator=","
+                />
               </p>
-              <p className="mt-1 text-indigo-200 font-medium tracking-wide">Total People Donated</p>
+              <p className="mt-2 text-indigo-200 font-medium tracking-wide uppercase text-center select-none">
+                Total People Donated
+              </p>
             </div>
           </div>
 
