@@ -13,6 +13,7 @@
     "bcryptjs": "^3.0.2",
     "framer-motion": "^12.16.0",
     "jsonwebtoken": "^9.0.2",
+    "jspdf": "^3.0.1",
     "lucide-react": "^0.513.0",
     "mongodb": "^6.17.0",
     "next": "15.3.3",
@@ -21,7 +22,8 @@
     "react": "^19.0.0",
     "react-countup": "^6.5.3",
     "react-dom": "^19.0.0",
-    "react-parallax-tilt": "^1.7.297"
+    "react-parallax-tilt": "^1.7.297",
+    "react-qr-code": "^2.0.15"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

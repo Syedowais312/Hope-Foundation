@@ -1,19 +1,32 @@
 // app/api/create-payment/route.js
+import clientPromise from "../../lib/mongodb";
 
 export async function POST(req) {
   try {
-    const body = await req.json();
-    const { name, phone, email } = body;
+    const { name, number, email, amount } = await req.json();
 
-    // Simulate a unique UPI QR link using the user's name
-    const paymentUrl = `upi://pay?pa=hopefoundation@upi&pn=${encodeURIComponent(name)}&tn=Thanks%20${encodeURIComponent(name)}%20for%20donating!`;
+    const paymentUrl = `upi://pay?pa=hopefoundation@upi&pn=${encodeURIComponent(name)}&am=${amount}&tn=Thank%20you%20${encodeURIComponent(name)}`;
 
-    return new Response(JSON.stringify({ paymentUrl }), {
-      status: 200,
-    });
+    const client = await clientPromise;
+    const db = client.db("hope_foundation");
+    const users = db.collection("users");
+
+    const result = await users.updateOne(
+      { email },
+      {
+        $push: {
+          donations: {
+            amount,
+            paymentUrl,
+            createdAt: new Date(),
+          },
+        },
+      }
+    );
+
+    return new Response(JSON.stringify({ paymentUrl }), { status: 200 });
   } catch (error) {
-    return new Response(JSON.stringify({ error: "Failed to generate QR" }), {
-      status: 500,
-    });
+    console.error("Donation Error:", error);
+    return new Response(JSON.stringify({ error: "Failed to donate" }), { status: 500 });
   }
 }

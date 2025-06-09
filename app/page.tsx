@@ -7,6 +7,7 @@ import DonationSection from "./components/DonationSection";
 import About from "./components/About";
 import Contact from "./components/Contact";
 import LoginSignupModal from "./components/LoginSignupModal";
+import NotificationForm from "./NotificationForm/page";
 
 export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -19,7 +20,9 @@ export default function Home() {
       <main className="max-w-7xl mx-auto py-12">
         {/* Home Section */}
         <section id="home" className="scroll-mt-20">
-          <DonationSection />
+          <DonationSection openLoginModal={() => setModalOpen(true)} />
+
+
         </section>
 
         <About />
@@ -29,6 +32,7 @@ export default function Home() {
       </main>
 
       <LoginSignupModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+       
     </>
   );
 }

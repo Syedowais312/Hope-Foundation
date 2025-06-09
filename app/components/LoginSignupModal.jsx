@@ -9,12 +9,19 @@ export default function LoginSignupModal({ isOpen, onClose }) {
     name: "",
     email: "",
     password: "",
-    number:"",
+    number: "",
+    confirmPassword: "",
   });
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!isLogin && form.password !== form.confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+
     const url = isLogin ? "/api/login" : "/api/signup";
 
     try {
@@ -34,7 +41,13 @@ export default function LoginSignupModal({ isOpen, onClose }) {
 
         login(data.user, data.token);
 
-        setForm({ name: "", email: "", password: "" ,number:""});
+        setForm({
+          name: "",
+          email: "",
+          password: "",
+          number: "",
+          confirmPassword: "",
+        });
         onClose();
       }
     } catch (err) {
@@ -47,7 +60,11 @@ export default function LoginSignupModal({ isOpen, onClose }) {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
       <div className="relative bg-white rounded-xl p-6 max-w-sm w-full shadow-xl">
-        <button className="absolute top-4 right-4 text-black" onClick={onClose}>
+        <button
+          className="absolute top-4 right-4 text-black"
+          onClick={onClose}
+          aria-label="Close"
+        >
           ✖
         </button>
 
@@ -56,28 +73,27 @@ export default function LoginSignupModal({ isOpen, onClose }) {
         </h2>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-         {!isLogin && (
-  <>
-    <input
-      type="text"
-      placeholder="Name"
-      value={form.name}
-      required
-      className="input border border-black px-4 py-2 rounded text-black"
-      onChange={(e) => setForm({ ...form, name: e.target.value })}
-    />
-     <input
-      type="tel"
-      placeholder="Phone Number"
-      value={form.number}
-      required
-      pattern="[0-9]{10}"
-      className="input border border-black px-4 py-2 rounded text-black"
-      onChange={(e) => setForm({ ...form, number: e.target.value })}
-    />
-   
-  </>
-)}
+          {!isLogin && (
+            <>
+              <input
+                type="text"
+                placeholder="Name"
+                value={form.name}
+                required
+                className="input border border-black px-4 py-2 rounded text-black"
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+              />
+              <input
+                type="tel"
+                placeholder="Phone Number"
+                value={form.number}
+                required
+                pattern="[0-9]{10}"
+                className="input border border-black px-4 py-2 rounded text-black"
+                onChange={(e) => setForm({ ...form, number: e.target.value })}
+              />
+            </>
+          )}
 
           <input
             type="email"
@@ -87,8 +103,7 @@ export default function LoginSignupModal({ isOpen, onClose }) {
             className="input border border-black px-4 py-2 rounded text-black"
             onChange={(e) => setForm({ ...form, email: e.target.value })}
           />
-          
-          
+
           <input
             type="password"
             placeholder="Password"
@@ -97,6 +112,25 @@ export default function LoginSignupModal({ isOpen, onClose }) {
             className="input border border-black px-4 py-2 rounded text-black"
             onChange={(e) => setForm({ ...form, password: e.target.value })}
           />
+
+          {!isLogin && (
+            <input
+              type="password"
+              placeholder="Confirm Password"
+              value={form.confirmPassword}
+              required
+              className="input border border-black px-4 py-2 rounded text-black"
+              onChange={(e) =>
+                setForm({ ...form, confirmPassword: e.target.value })
+              }
+            />
+          )}
+         {/* Show error message only when passwords don't match */}
+              {form.confirmPassword && form.password !== form.confirmPassword && (
+                <p className="text-red-600 text-sm">
+                  Passwords do not match.
+                </p>
+              )}
           <button
             type="submit"
             className="bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg"
