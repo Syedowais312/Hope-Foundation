@@ -12,28 +12,22 @@ export async function GET(request) {
   try {
     const client = await clientPromise;
     const db = client.db("hope_foundation");
-    const usersCollection = db.collection("donations"); // Your collection name with user + donations nested
+    const usersCollection = db.collection("users"); // Changed to 'users' collection
 
-    // Find the user document by email
-    const user = await usersCollection.findOne({ email: email });
+    // Find the user document by email (case insensitive)
+    const user = await usersCollection.findOne({ 
+      email: { $regex: new RegExp(`^${email}$`, 'i') }
+    });
 
     if (!user) {
-      // No user found with this email
       return NextResponse.json({ donations: [] });
     }
 
-    // Extract donations array (empty if none)
-    const donationsArray = user.donations || [];
-
-    // Add user info to each donation
-    const donationsWithUserInfo = donationsArray.map((donation) => ({
-      ...donation,
-      name: user.name,
-      email: user.email,
-      phone: user.number,  // Assuming phone is stored as 'number' in user doc
-    }));
-
-    return NextResponse.json({ donations: donationsWithUserInfo });
+    // Return donations array (empty if none exists)
+    return NextResponse.json({ 
+      donations: user.donations || [] 
+    });
+    
   } catch (error) {
     console.error("Error fetching donations:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

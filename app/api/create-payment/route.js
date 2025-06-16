@@ -3,15 +3,15 @@ import clientPromise from "../../lib/mongodb";
 
 export async function POST(req) {
   try {
-    const { name, number, email, amount } = await req.json();
+    const { name, email, amount=100 } = await req.json(); // Removed unused 'number'
 
     const paymentUrl = `upi://pay?pa=hopefoundation@upi&pn=${encodeURIComponent(name)}&am=${amount}&tn=Thank%20you%20${encodeURIComponent(name)}`;
 
     const client = await clientPromise;
     const db = client.db("hope_foundation");
     const users = db.collection("users");
-
-    const result = await users.updateOne(
+// Removed unused 'result' assignment
+    await users.updateOne(
       { email },
       {
         $push: {

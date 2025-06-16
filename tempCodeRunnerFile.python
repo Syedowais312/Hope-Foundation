@@ -1,0 +1,30 @@
+# Define a class to represent complex numbers
+class Complex:
+    def __init__(self, real, imag):
+        self.real = real
+        self.imag = imag
+
+    def __add__(self, other):
+        return Complex(self.real + other.real, self.imag + other.imag)
+
+    def __str__(self):
+        return "{}+{}i".format(self.real, self.imag)
+
+# Read number of complex numbers (N >= 2)
+n = int(input("Enter the number of complex numbers (n >= 2): "))
+complex_numbers = []
+
+# Input complex numbers
+for i in range(n):
+    real = int(input(f"Enter the real part of complex number {i + 1}: "))
+    imag = int(input(f"Enter the imaginary part of complex number {i + 1}: "))
+    obj = Complex(real, imag)
+    complex_numbers.append(obj)
+
+# Calculate sum of all complex numbers
+result = complex_numbers[0]
+for i in range(1, n):
+    result = result + complex_numbers[i]
+
+# Display the result
+print("The sum of complex numbers is:", result)

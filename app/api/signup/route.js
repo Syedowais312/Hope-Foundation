@@ -45,7 +45,7 @@ export async function POST(req) {
     const result = await users.insertOne(newUser);
 
     // Generate JWT token
-    const jwtSecret = "Owais@786"; // Move to .env in production
+    const jwtSecret = "Owais@786"; //Want to Move to .env in production
     const token = jwt.sign(
       {
         email: newUser.email,

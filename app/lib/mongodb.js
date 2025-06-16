@@ -24,9 +24,9 @@ if (process.env.NODE_ENV === "development") {
 // Named export to get client and db
 export async function getDatabase() {
   const client = await clientPromise;
-  const db = client.db("hope_foundation"); // Database name here
+  const db = client.db("hope_foundation"); 
   return { client, db };
 }
 
-// Default export for backward compatibility
+
 export default clientPromise;
