@@ -1,32 +1,48 @@
-// app/api/create-payment/route.js
-import clientPromise from "../../lib/mongodb";
+import Razorpay from "razorpay";
+import { NextResponse } from "next/server";
+import clientPromise from "@/app/lib/mongodb";
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 
 export async function POST(req) {
   try {
-    const { name, email, amount=100 } = await req.json(); // Removed unused 'number'
+    const { amount } = await req.json();
 
-    const paymentUrl = `upi://pay?pa=hopefoundation@upi&pn=${encodeURIComponent(name)}&am=${amount}&tn=Thank%20you%20${encodeURIComponent(name)}`;
+    if (!amount || isNaN(amount) || amount <= 0) {
+      return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
+    }
 
+    // 1. Create Razorpay order
+    const order = await razorpay.orders.create({
+      amount: amount * 100, // paise
+      currency: "INR",
+      receipt: `donation_rcpt_${Date.now()}`,
+      payment_capture: 1,
+    });
+
+    // 2. Connect to MongoDB and update stats
     const client = await clientPromise;
     const db = client.db("hope_foundation");
-    const users = db.collection("users");
-// Removed unused 'result' assignment
-    await users.updateOne(
-      { email },
+    const stats = db.collection("donation_stats");
+
+    await stats.updateOne(
+      { _id: "global_stats" }, // fixed ID
       {
-        $push: {
-          donations: {
-            amount,
-            paymentUrl,
-            createdAt: new Date(),
-          },
+        $inc: {
+          totalAmount: amount,
+          donationCount: 1,
         },
-      }
+      },
+      { upsert: true }
     );
 
-    return new Response(JSON.stringify({ paymentUrl }), { status: 200 });
+    // 3. Return Razorpay order details
+    return NextResponse.json(order);
   } catch (error) {
-    console.error("Donation Error:", error);
-    return new Response(JSON.stringify({ error: "Failed to donate" }), { status: 500 });
+    console.error("Create Order Error:", error);
+    return NextResponse.json({ error: "Failed to create Razorpay order" }, { status: 500 });
   }
 }

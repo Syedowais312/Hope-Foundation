@@ -24,7 +24,7 @@ export async function POST(req) {
     }
 
     // Create UPI payment URL (amount 0 initially)
-    const amount = 0;
+    const amount = 100;
     const paymentUrl = `upi://pay?pa=hopefoundation@upi&pn=${encodeURIComponent(name)}&am=${amount}&tn=Thank%20you%20${encodeURIComponent(name)}`;
 
     const newUser = {

@@ -15,55 +15,93 @@ export default function DonationSection({ openLoginModal }) {
   const [donationAmount, setDonationAmount] = useState("");
   const [generating, setGenerating] = useState(false);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTotalMoney((prev) => prev + Math.floor(Math.random() * 1000));
-      setTotalPeople((prev) => prev + Math.floor(Math.random() * 5));
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
+ useEffect(() => {
+  async function fetchDonationStats() {
+    try {
+      const res = await fetch("/api/get-donation-stats");
+      const data = await res.json();
+      setTotalMoney(data.totalAmount ||  setTotalMoney((prev) => prev + Math.floor(Math.random() * 1000)));
+      setTotalPeople(data.donationCount ||     setTotalPeople((prev) => prev + Math.floor(Math.random() * 5))
+);
+    } catch (err) {
+      console.error("Failed to fetch donation stats", err);
+    }
+  }
 
-  useEffect(() => {
-    async function fetchPaymentURL() {
-      if (!user) return;
-      try {
-        const res = await fetch(`/api/get-user-contributions?email=${encodeURIComponent(user.email)}`);
-        if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`);
-        const data = await res.json();
+  fetchDonationStats();
 
-        if (data?.donations?.length > 0) {
-          const latestDonation = data.donations.reduce((latest, current) =>
-            new Date(current.createdAt) > new Date(latest.createdAt) ? current : latest
-          );
-          const url = latestDonation.paymentUrl || latestDonation.paymentURL;
-          if (url) setPaymentUrl(url);
-        } else {
-          setPaymentUrl("");
-        }
-      } catch (error) {
-        console.error("Error fetching payment URL:", error);
-        setPaymentUrl("");
-      }
+  const interval = setInterval(fetchDonationStats, 10000); // refresh every 10 sec
+  return () => clearInterval(interval);
+}, []);
+
+
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const openRazorpay = async (order_id, amount) => {
+    const isLoaded = await loadRazorpayScript();
+    if (!isLoaded) {
+      alert("Failed to load Razorpay SDK");
+      return;
     }
 
-    fetchPaymentURL();
-  }, [user]);
+    const options = {
+      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      amount,
+      currency: "INR",
+      name: "Hope Foundation",
+      description: "Donation",
+      image: "/logo.png",
+      order_id,
+      handler: function (response) {
+        alert("Thank you for your donation!");
+        console.log("Payment success:", response);
+        // Optional: send response.razorpay_payment_id to DB
+      },
+      prefill: {
+        name: user.name,
+        email: user.email,
+      },
+      theme: {
+        color: "#00b894",
+      },
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  };
 
   const generatePaymentQR = async () => {
     if (!donationAmount || isNaN(donationAmount) || donationAmount <= 0) {
       alert("Please enter a valid amount");
       return;
     }
+
     try {
       setGenerating(true);
       const res = await axios.post("/api/create-payment", {
-        name: user.name,
-        email: user.email,
         amount: donationAmount,
       });
-      setPaymentUrl(res.data.paymentUrl);
+
+      const { id: order_id, amount } = res.data;
+
+      // Create donation link for QR
+      const checkoutUrl = `${window.location.origin}/donate?order_id=${order_id}&amount=${amount}`;
+      setPaymentUrl(checkoutUrl);
+
+      // Optional: instantly open popup
+      openRazorpay(order_id, amount);
+
     } catch (err) {
-      console.error("Error generating payment QR:", err);
+      console.error("Error generating payment link:", err);
+      alert("Failed to generate payment link.");
     } finally {
       setGenerating(false);
     }
@@ -119,10 +157,7 @@ export default function DonationSection({ openLoginModal }) {
           <div className="flex flex-wrap gap-8 bg-white bg-opacity-10 backdrop-blur-md rounded-3xl px-8 py-10 shadow-lg w-full justify-center border border-white/20">
             <div className="flex flex-col items-center w-40">
               <div className="mb-2 h-1.5 w-12 rounded-full bg-indigo-500"></div>
-              <p
-                className="text-4xl font-extrabold text-green-400 drop-shadow-md font-mono w-full text-center select-text"
-                style={{ letterSpacing: "0.04em" }}
-              >
+              <p className="text-4xl font-extrabold text-green-400 drop-shadow-md font-mono w-full text-center select-text">
                 <CountUp end={totalMoney} duration={1.5} separator="," prefix="₹" />
               </p>
               <p className="mt-2 text-indigo-200 font-medium tracking-wide uppercase text-center select-none">
@@ -131,10 +166,7 @@ export default function DonationSection({ openLoginModal }) {
             </div>
             <div className="flex flex-col items-center w-32">
               <div className="mb-2 h-1.5 w-8 rounded-full bg-blue-400"></div>
-              <p
-                className="text-4xl font-extrabold text-blue-400 drop-shadow-md font-mono w-full text-center select-text"
-                style={{ letterSpacing: "0.04em" }}
-              >
+              <p className="text-4xl font-extrabold text-blue-400 drop-shadow-md font-mono w-full text-center select-text">
                 <CountUp end={totalPeople} duration={1.5} separator="," />
               </p>
               <p className="mt-2 text-indigo-200 font-medium tracking-wide uppercase text-center select-none">
@@ -186,7 +218,7 @@ export default function DonationSection({ openLoginModal }) {
                       disabled={generating || !donationAmount}
                       className="w-full py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded font-semibold disabled:opacity-50 hover:scale-105 transition"
                     >
-                      {generating ? "Generating..." : "Generate New QR"}
+                      {generating ? "Generating..." : "Donate with Razorpay"}
                     </button>
                   </>
                 )}

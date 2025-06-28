@@ -18,7 +18,7 @@ export default function Home() {
       <Navbar openLoginModal={() => setModalOpen(true)} />
 
       <main className="max-w-7xl mx-auto py-12">
-        {/* Home Section */}
+      
         <section id="home" className="scroll-mt-20">
           <DonationSection openLoginModal={() => setModalOpen(true)} />
 
