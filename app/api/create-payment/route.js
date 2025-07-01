@@ -1,6 +1,5 @@
 import Razorpay from "razorpay";
 import { NextResponse } from "next/server";
-import clientPromise from "@/app/lib/mongodb";
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -15,31 +14,13 @@ export async function POST(req) {
       return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
     }
 
-    // 1. Create Razorpay order
     const order = await razorpay.orders.create({
-      amount: amount * 100, // paise
+      amount: amount * 100, // Convert to paise
       currency: "INR",
       receipt: `donation_rcpt_${Date.now()}`,
       payment_capture: 1,
     });
 
-    // 2. Connect to MongoDB and update stats
-    const client = await clientPromise;
-    const db = client.db("hope_foundation");
-    const stats = db.collection("donation_stats");
-
-    await stats.updateOne(
-      { _id: "global_stats" }, // fixed ID
-      {
-        $inc: {
-          totalAmount: amount,
-          donationCount: 1,
-        },
-      },
-      { upsert: true }
-    );
-
-    // 3. Return Razorpay order details
     return NextResponse.json(order);
   } catch (error) {
     console.error("Create Order Error:", error);

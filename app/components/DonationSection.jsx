@@ -15,25 +15,26 @@ export default function DonationSection({ openLoginModal }) {
   const [donationAmount, setDonationAmount] = useState("");
   const [generating, setGenerating] = useState(false);
 
- useEffect(() => {
-  async function fetchDonationStats() {
-    try {
-      const res = await fetch("/api/get-donation-stats");
-      const data = await res.json();
-      setTotalMoney(data.totalAmount ||  setTotalMoney((prev) => prev + Math.floor(Math.random() * 1000)));
-      setTotalPeople(data.donationCount ||     setTotalPeople((prev) => prev + Math.floor(Math.random() * 5))
-);
-    } catch (err) {
-      console.error("Failed to fetch donation stats", err);
+  useEffect(() => {
+    async function fetchDonationStats() {
+      try {
+        const res = await fetch("/api/get-donation-stats");
+        const data = await res.json();
+        setTotalMoney(
+          data.totalAmount || setTotalMoney((prev) => prev + Math.floor(Math.random() * 1000))
+        );
+        setTotalPeople(
+          data.donationCount || setTotalPeople((prev) => prev + Math.floor(Math.random() * 5))
+        );
+      } catch (err) {
+        console.error("Failed to fetch donation stats", err);
+      }
     }
-  }
 
-  fetchDonationStats();
-
-  const interval = setInterval(fetchDonationStats, 10000); // refresh every 10 sec
-  return () => clearInterval(interval);
-}, []);
-
+    fetchDonationStats();
+    const interval = setInterval(fetchDonationStats, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
@@ -60,10 +61,30 @@ export default function DonationSection({ openLoginModal }) {
       description: "Donation",
       image: "/logo.png",
       order_id,
-      handler: function (response) {
-        alert("Thank you for your donation!");
-        console.log("Payment success:", response);
-        // Optional: send response.razorpay_payment_id to DB
+      handler: async function (response) {
+        try {
+          const verifyRes = await fetch("/api/verify-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+              userEmail: user.email,
+            }),
+          });
+
+          const result = await verifyRes.json();
+
+          if (verifyRes.ok) {
+            alert("✅ Thank you! Your donation was verified and recorded.");
+          } else {
+            alert("⚠️ Verification failed: " + result.error);
+          }
+        } catch (err) {
+          console.error("Verification error:", err);
+          alert("Something went wrong during payment verification.");
+        }
       },
       prefill: {
         name: user.name,
@@ -92,13 +113,10 @@ export default function DonationSection({ openLoginModal }) {
 
       const { id: order_id, amount } = res.data;
 
-      // Create donation link for QR
       const checkoutUrl = `${window.location.origin}/donate?order_id=${order_id}&amount=${amount}`;
       setPaymentUrl(checkoutUrl);
 
-      // Optional: instantly open popup
       openRazorpay(order_id, amount);
-
     } catch (err) {
       console.error("Error generating payment link:", err);
       alert("Failed to generate payment link.");
@@ -132,7 +150,6 @@ export default function DonationSection({ openLoginModal }) {
           !user ? "opacity-30 blur-sm pointer-events-none select-none" : "opacity-100"
         }`}
       >
-        {/* Left Content */}
         <div className="flex-1 max-w-lg">
           <h2 className="text-4xl md:text-5xl font-extrabold leading-tight bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 text-transparent bg-clip-text drop-shadow-xl">
             “Your small help can change someone's life forever.”
@@ -142,18 +159,14 @@ export default function DonationSection({ openLoginModal }) {
           </p>
           {user && (
             <Link href="/NotificationForm">
-              <button
-                className="mt-8 px-8 py-3 text-lg bg-gradient-to-r from-green-400 to-lime-500 rounded-xl shadow-lg hover:from-green-500 hover:to-lime-600 transition duration-300 font-semibold text-white ring-2 ring-white/10 hover:scale-105"
-              >
+              <button className="mt-8 px-8 py-3 text-lg bg-gradient-to-r from-green-400 to-lime-500 rounded-xl shadow-lg hover:from-green-500 hover:to-lime-600 transition duration-300 font-semibold text-white ring-2 ring-white/10 hover:scale-105">
                 💖 Set Notification
               </button>
             </Link>
           )}
         </div>
 
-        {/* Right Content */}
         <div className="flex-1 flex flex-col gap-10 md:gap-12 items-center md:items-end w-full max-w-md">
-          {/* Stats */}
           <div className="flex flex-wrap gap-8 bg-white bg-opacity-10 backdrop-blur-md rounded-3xl px-8 py-10 shadow-lg w-full justify-center border border-white/20">
             <div className="flex flex-col items-center w-40">
               <div className="mb-2 h-1.5 w-12 rounded-full bg-indigo-500"></div>
@@ -175,7 +188,6 @@ export default function DonationSection({ openLoginModal }) {
             </div>
           </div>
 
-          {/* QR Section */}
           <div id="qr-section" className="w-full max-w-md">
             <Tilt
               glareEnable={true}
@@ -192,7 +204,8 @@ export default function DonationSection({ openLoginModal }) {
                 <div className="bg-white/20 p-4 rounded-xl flex justify-center">
                   {user && paymentUrl ? (
                     <QRCodeCanvas
-                      value={paymentUrl}
+                        value={paymentUrl ?? "https://razorpay.com/"}
+
                       size={200}
                       level="H"
                       fgColor="#000000"
@@ -226,7 +239,6 @@ export default function DonationSection({ openLoginModal }) {
             </Tilt>
           </div>
 
-          {/* Other Donation Methods */}
           <div className="w-full bg-white/10 backdrop-blur-md p-6 rounded-xl border border-white/10 shadow-xl">
             <h3 className="text-lg font-bold text-white mb-4">Other Ways to Donate</h3>
             <ul className="space-y-2 text-indigo-200 text-sm font-medium">

@@ -50,6 +50,7 @@ export default function NotificationForm() {
               onChange={(e) => setFrequency(e.target.value)}
               className="w-full rounded-lg border border-gray-300 px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
             >
+              <option value="days">Daily</option>
               <option value="weekly">Weekly</option>
               <option value="monthly">Monthly</option>
             </select>

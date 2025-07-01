@@ -24,28 +24,20 @@ export async function POST(req) {
     }
 
     // Create UPI payment URL (amount 0 initially)
-    const amount = 100;
-    const paymentUrl = `upi://pay?pa=hopefoundation@upi&pn=${encodeURIComponent(name)}&am=${amount}&tn=Thank%20you%20${encodeURIComponent(name)}`;
-
+    
     const newUser = {
       name,
       email,
       password: hashedPassword,
       number,
       createdAt: new Date(),
-      donations: [
-        {
-          amount,
-          paymentUrl,
-          createdAt: new Date(),
-        },
-      ],
+     
     };
 
     const result = await users.insertOne(newUser);
 
     // Generate JWT token
-    const jwtSecret = "Owais@786"; //Want to Move to .env in production
+    const jwtSecret = process.env.JWT_SECRET; //Want to Move to .env in production
     const token = jwt.sign(
       {
         email: newUser.email,
@@ -54,7 +46,7 @@ export async function POST(req) {
       },
       jwtSecret,
       {
-        expiresIn: "24h",
+        expiresIn: "7d",
         issuer: "hope_foundation",
         subject: result.insertedId.toString(),
       }
@@ -69,7 +61,7 @@ export async function POST(req) {
           name: newUser.name,
           email: newUser.email,
           number: newUser.number,
-          paymentUrl,
+         
         },
       }),
       { status: 200 }
